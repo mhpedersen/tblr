@@ -1,5 +1,5 @@
-
-
+#' Create a table object from a data.frame
+#' @export
 tbl <- function(d, row.names=T, col.names=T, corner="", ...) {
     if (!is.data.frame(d)) stop("X must be data.frame")  # coerce to data.frame
 
@@ -19,11 +19,14 @@ tbl <- function(d, row.names=T, col.names=T, corner="", ...) {
     class = "tbl")
 }
 
-# borders  (not clear what style is)
+#' cell_format
+#' @export
 cell_format <- function(color=NULL, background=NULL, font=NULL, style=NULL, align=NULL, format=NULL, width=NULL)
     structure(list(color=color, background=background, font=font, style=style, align=align, format=format, width=width),
               class="cell_format")
 
+#' column
+#' @export
 column <- function(colname, ...)
     structure(list(
         colname=colname,
@@ -33,8 +36,12 @@ column <- function(colname, ...)
 
 #columns
 
+#' cell
+#' @export
 cell <- function(r, c, ...) cells(list(c(r,c)),...)
 
+#' cells
+#' @export
 cells <- function(coords, ...)
     structure(list(
         coords=coords,
@@ -42,25 +49,38 @@ cells <- function(coords, ...)
     ),
     class="cells")
 
+#' hlines
+#' @export
 hlines <- function(rows, style="1px solid black") structure(list(rows=rows, style=style), class="hlines")
 
+#' hline
+#' @export
 hline <- function(row, ...) hlines(c(row), ...)
 
+#' vlines
+#' @export
 vlines <- function(cols, style="1px solid black") structure(list(cols=cols, style=style), class="vlines")
 
+#' vline
+#' @export
 vline <- function(col, ...) vlines(c(col), ...)
 
-# allow different style for each side
+#' frame
+#' @export
 frame <- function(top=TRUE, bottom=TRUE, left=TRUE, right=TRUE, style="1px solid")
     structure(list(top=top, bottom=bottom, left=left, right=right, style=style
     ),
     class="frame")
 
+#' grid
+#' @export
 grid <- function(row.begin=1, col.begin=1, row.step=1, col.step=1, style="1px dashed lightgrey")
     structure(list(row.begin=row.begin, col.begin=col.begin, row.step=row.step, col.step=col.step, style=style
     ),
     class="grid")
 
+#' print.tbl
+#' @export
 print.tbl <- function(t,...){   # generate html, latex, or console output
     width_master <- ifelse(is.null(t$master_format$width), "", paste0(' width=',t$master_format$width) )
     align_master <- ifelse(is.null(t$master_format$align), "", paste0(' align="',t$master_format$align,'"') )
@@ -142,7 +162,7 @@ print.tbl <- function(t,...){   # generate html, latex, or console output
     cat("</TABLE>")
 }
 
-#adding other tbl classes should append them into a format container
+#' @export
 Ops.tbl <- function(t, x){
     if(.Generic!="+")
         stop(paste0(.Generic," not implemented for tbl"))
