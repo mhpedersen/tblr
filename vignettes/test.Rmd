@@ -1,0 +1,31 @@
+---
+title: "rtable"
+author: "Morten Holm Pedersen"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r, echo=FALSE, results='asis', message=FALSE}
+library(rtable)
+d <- data.frame("0"=c(1,0,0,0,0,0,0,0,0), "1"=c(2,0,0,0,0,0,0,0,0), "2"=c(0,3,0,0,0,0,0,0,0), "3"=c(0,0,0,0,0,0,0,0,0), 
+                "17"=c(0,5,0,0,0,0,0,0,0), SS=c(0,0,0,0,0,0,0,0,0), DIL=c(0,0,1,0,0,0,0,0,0), FCL=c(0,0,1,0,0,0,0,0,0), 
+                Sum=c(0,0,0,0,0,0,0,0,0), check.names=FALSE,
+                row.names=c("0","1","2","3","17","SS","DIL","FCL","Sum"))
+```
+
+rtable allows us to easily specify formatting of tables, for example to produce something like this:
+```{r, echo=FALSE, results='asis', message=FALSE}
+t <- tbl(d, col.names=T, row.names=T, width=30, align="center") + grid() + vlines(c(0,3,5,8)) + hlines(c(0,3,5,8)) +
+        cells(lapply(1:8, function(x) c(x,x)), background="lightgray")
+for(i in 1:nrow(d))
+    for(j in 1:ncol(d)){
+        if(d[[j]][[i]]>0 & i!=j)
+            t <- t + cell(i,j, background="whitesmoke")
+    }
+t <- t + cell(2,5,background="yellow", color="red")
+t
+```
