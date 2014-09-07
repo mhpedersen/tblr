@@ -1,9 +1,70 @@
+#' Apply formatting to data.frame content
+#' @export
+format_data <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, na.rm=getOption("tbl.na.rm",TRUE)){
+    assign("fd", d)
+
+    if(useOptions){
+        default_typeFormats <- getOption("tbl.typeFormats")
+        default_colFormats <- getOption("tbl.colFormats")
+    } else {
+        default_typeFormats <- NULL
+        default_colFormats  <- NULL
+    }
+
+    for(i in 1:ncol(d)){
+        if(names(d)[[i]] %in% names(colFormats))
+            fmt <- colFormats[[names(d)[[i]]]]
+        else if(names(d)[[i]] %in% names(default_colFormats))
+            fmt <- default_colFormats[[names(d)[[i]]]]
+        else if(class(d[[i]]) %in% names(typeFormats))
+            fmt <- typeFormats[[class(d[[i]])]]
+        else if(class(d[[i]]) %in% names(default_typeFormats))
+            fmt <- default_typeFormats[[class(d[[i]])]]
+        else
+            fmt <- NULL
+
+        if(class(fmt) %in% c("NULL", "list")){
+            fmt$x <- d[[i]]
+            fd[[i]] <- do.call("format", fmt)
+        } else if(class(fmt)=="function")
+            fd[[i]] <- fmt(d[[i]])
+        else if(class(fmt)=="character")
+            fd[[i]] <- sprintf(fmt, d[[i]])
+
+        rm <- NULL
+        if(class(na.rm)=="logical")
+            rm <- na.rm
+        else if(class(na.rm)=="list" && names(d)[[i]] %in% names(na.rm))
+            rm <- na.rm[[names(d)[[i]]]]
+        if(class(rm)=="logical"){
+            if(rm) rm <- ""
+            else   rm <- NULL
+        }
+        if(!is.null(rm))
+            fd[[i]][is.na(d[[i]])] <- rm
+    }
+
+    fd
+}
+
+# factors?   tables?
+# regex? to match cols
+
+#options(tbl.typeFormats=list(Date    = list(format="%d %b %Y"),
+#                             numeric = list(digits=0, scientific=FALSE, big.mark=",")))
+
+#format_data(t, colFormats=list(x=function(x) sprintf("%0.2f%%",x*100),
+#                               OPB="%0.7f"
+#                               ), na.rm=list(x="-",UPB=T,OPB=T) )
+
+
 #' Create a table object from a data.frame
 #' @export
-tbl <- function(d, row.names=T, col.names=T, corner="", ...) {
+tbl <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, na.rm=getOption("tbl.na.rm",TRUE),
+                row.names=T, col.names=T, corner="", ...) {
     if (!is.data.frame(d)) stop("X must be data.frame")  # coerce to data.frame
 
-    structure( list(data=d,
+    structure( list(data=format_data(d, colFormats, typeFormats, useOptions, na.rm),
                     formats=array(rep(list(NULL),prod(dim(d))),dim=dim(d)),
                     master_format=cell_format(...),
                     cols=list(),
@@ -94,7 +155,7 @@ print.tbl <- function(t,...){   # generate html, latex, or console output
         if(!is.null(fstyle))
             fstyle <- paste0('style="',do.call(paste, as.list(c(fstyle, sep=";"))), '"')
     }
-    cat('<TABLE rules="groups" ', fstyle, '">\n')
+    cat('<TABLE rules="groups" ', fstyle, '>\n')
 
     # Generate table headers
     hline <- ifelse(is.null(t$col0.linestyle), "", paste0(' style="',t$col0.linestyle,'"'))
@@ -135,7 +196,7 @@ print.tbl <- function(t,...){   # generate html, latex, or console output
 
         if(t$row.names){
             vline <- ifelse(is.null(t$row0.linestyle), "", paste0(' style="',t$row0.linestyle,'"'))
-            cat('<TH', vline, '>',rownames(t$data)[i],'</TH>', sep='')
+            cat('<TH', vline, '>', rownames(t$data)[i], '</TH>', sep='')
         }
         for(j in 1:ncol(t$data)){
             #vline <- t$vlines[j][[1]]
@@ -154,7 +215,7 @@ print.tbl <- function(t,...){   # generate html, latex, or console output
             if(!is.null(style))
                 style <- paste0('style="',do.call(paste, as.list(c(style, sep=";"))), '"')
 
-            cat('<TD',align,style,'>', t$data[i,j], '</TD>', sep='')
+            cat('<TD',align,style,'>', format(t$data[i,j]), '</TD>', sep='')
         }
         cat('</TR>\n')
     }

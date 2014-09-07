@@ -4,7 +4,7 @@ author: "Morten Holm Pedersen"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{r_table}
   %\VignetteEngine{knitr}
   %\usepackage[utf8]{inputenc}
 ---
@@ -21,11 +21,11 @@ rtable allows us to easily specify formatting of tables, for example to produce 
 ```{r, echo=FALSE, results='asis', message=FALSE}
 t <- tbl(d, col.names=T, row.names=T, width=30, align="center") + grid() + vlines(c(0,3,5,8)) + hlines(c(0,3,5,8)) +
         cells(lapply(1:8, function(x) c(x,x)), background="lightgray")
+#which(!diag(1,nrow(d),ncol(d)) & d>0, arr.ind=T)
 for(i in 1:nrow(d))
-    for(j in 1:ncol(d)){
+    for(j in 1:ncol(d))
         if(d[[j]][[i]]>0 & i!=j)
             t <- t + cell(i,j, background="whitesmoke")
-    }
 t <- t + cell(2,5,background="yellow", color="red")
 t
 ```
