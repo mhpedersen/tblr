@@ -47,7 +47,6 @@ format_data <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, n
     fd
 }
 
-# factors?   tables?
 # regex? to match cols
 
 #options(tbl.typeFormats=list(Date    = list(format="%d %b %Y"),
@@ -58,12 +57,22 @@ format_data <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, n
 #                               ), na.rm=list(x="-",UPB=T,OPB=T) )
 
 
+
+#aov, lm, anova, glm etc  (from xtable, potentially more; rpart, surv...), time series
+
+#' @export
+tbl <- function(x, ...) UseMethod("tbl")
+#' @export
+tbl.default <- function(d, ...) tbl(as.data.frame(d), ...)
+#' @export
+tbl.table <- function(t, ...) tbl(as.data.frame.matrix(t), ...)
+
+# steal kable logic for detecting whether to include row.names or not
+
 #' Create a table object from a data.frame
 #' @export
-tbl <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, na.rm=getOption("tbl.na.rm",TRUE),
+tbl.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, na.rm=getOption("tbl.na.rm",TRUE),
                 row.names=T, col.names=T, corner="", ...) {
-    if (!is.data.frame(d)) stop("X must be data.frame")  # coerce to data.frame
-
     structure( list(data=format_data(d, colFormats, typeFormats, useOptions, na.rm),
                     formats=array(rep(list(NULL),prod(dim(d))),dim=dim(d)),
                     master_format=cell_format(...),
@@ -252,9 +261,9 @@ Ops.tbl <- function(t, x){
     else if(class(x)=="frame")
         t$frame <- x
     else if(class(x)=="grid"){
-        for(i in seq(x$row.begin, dim(t$data)[1], x$row.step))
+        for(i in seq(x$row.begin, dim(t$data)[1]-1, x$row.step))
             t$hlines[[i]] <- paste0("border-bottom:",x$style)
-        for(i in seq(x$col.begin, dim(t$data)[2], x$col.step))
+        for(i in seq(x$col.begin, dim(t$data)[2]-1, x$col.step))
             t$vlines[[i]] <- paste0("border-right:",x$style)
     } else
         stop("Can not add to tbl: ", class(x))
