@@ -61,17 +61,17 @@ format_data <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, n
 #aov, lm, anova, glm etc  (from xtable, potentially more; rpart, surv...), time series
 
 #' @export
-tbl <- function(x, ...) UseMethod("tbl")
+tblr <- function(x, ...) UseMethod("tblr")
 #' @export
-tbl.default <- function(d, ...) tbl(as.data.frame(d), ...)
+tblr.default <- function(d, ...) tblr(as.data.frame(d), ...)
 #' @export
-tbl.table <- function(t, ...) tbl(as.data.frame.matrix(t), ...)
+tblr.table <- function(t, ...) tblr(as.data.frame.matrix(t), ...)
 
 # steal kable logic for detecting whether to include row.names or not
 
 #' Create a table object from a data.frame
 #' @export
-tbl.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, na.rm=getOption("tbl.na.rm",TRUE),
+tblr.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, na.rm=getOption("tbl.na.rm",TRUE),
                 row.names=T, col.names=T, corner="", ...) {
     structure( list(data=format_data(d, colFormats, typeFormats, useOptions, na.rm),
                     formats=array(rep(list(NULL),prod(dim(d))),dim=dim(d)),
@@ -86,8 +86,10 @@ tbl.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE
                     row0.linestyle=NULL,
                     col0.linestyle=NULL
     ),
-    class = "tbl")
+    class = "tblr")
 }
+
+# align, width... operator
 
 #' cell_format
 #' @export
@@ -151,7 +153,7 @@ grid <- function(row.begin=1, col.begin=1, row.step=1, col.step=1, style="1px da
 
 #' print.tbl
 #' @export
-print.tbl <- function(t,...){   # generate html, latex, or console output
+print.tblr <- function(t,...){   # generate html, latex, or console output
     width_master <- ifelse(is.null(t$master_format$width), "", paste0(' width=',t$master_format$width) )
     align_master <- ifelse(is.null(t$master_format$align), "", paste0(' align="',t$master_format$align,'"') )
 
@@ -233,7 +235,7 @@ print.tbl <- function(t,...){   # generate html, latex, or console output
 }
 
 #' @export
-Ops.tbl <- function(t, x){
+Ops.tblr <- function(t, x){
     if(.Generic!="+")
         stop(paste0(.Generic," not implemented for tbl"))
 
