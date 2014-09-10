@@ -4,8 +4,8 @@
 \title{Create a table object from a data.frame}
 \usage{
 \method{tblr}{data.frame}(d, colFormats = NULL, typeFormats = NULL,
-  useOptions = TRUE, na.rm = getOption("tbl.na.rm", TRUE), row.names = T,
-  col.names = T, corner = "", ...)
+  useOptions = TRUE, na.rm = getOption("tbl.na.rm", TRUE),
+  row.names = NULL, col.names = T, corner = "", ...)
 }
 \description{
 Create a table object from a data.frame

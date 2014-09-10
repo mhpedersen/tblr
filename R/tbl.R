@@ -1,11 +1,11 @@
 #' Apply formatting to data.frame content
 #' @export
-format_data <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, na.rm=getOption("tbl.na.rm",TRUE)){
+format_data <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, na.rm=getOption("tblr.na.rm",TRUE)){
     assign("fd", d)
 
     if(useOptions){
-        default_typeFormats <- getOption("tbl.typeFormats")
-        default_colFormats <- getOption("tbl.colFormats")
+        default_typeFormats <- getOption("tblr.typeFormats")
+        default_colFormats <- getOption("tblr.colFormats")
     } else {
         default_typeFormats <- NULL
         default_colFormats  <- NULL
@@ -47,9 +47,33 @@ format_data <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, n
     fd
 }
 
+#' Convert certain characters to HTML encoding
+#'
+#' Convert certain characters to HTML encoding, eg. '<' becomes '&amp;'
+#' Special symbols can be specified as LaTeX (TODO)
+#'
+#' @references
+#' \url{http://www.escapecodes.info}
+#'
+#' @export
+HTMLencode <- function(s){
+    conversion <- list(
+        c("&", "&amp;"),
+        c("<", "&lt;"),
+        c(">", "&gt;"),
+        c("'", "&rsquo;"),
+        c('"', "&quot;"),
+        c("£", "&pound;"),
+        c("€", "&euro;")
+        )
+    for(c in conversion)
+        s <- gsub(c[[1]], c[[2]], s)
+    s
+}
+
 # regex? to match cols
 
-#options(tbl.typeFormats=list(Date    = list(format="%d %b %Y"),
+#options(tblr.typeFormats=list(Date    = list(format="%d %b %Y"),
 #                             numeric = list(digits=0, scientific=FALSE, big.mark=",")))
 
 #format_data(t, colFormats=list(x=function(x) sprintf("%0.2f%%",x*100),
@@ -67,13 +91,16 @@ tblr.default <- function(d, ...) tblr(as.data.frame(d), ...)
 #' @export
 tblr.table <- function(t, ...) tblr(as.data.frame.matrix(t), ...)
 
-# steal kable logic for detecting whether to include row.names or not
+
 
 #' Create a table object from a data.frame
 #' @export
 tblr.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, na.rm=getOption("tbl.na.rm",TRUE),
-                row.names=T, col.names=T, corner="", ...) {
-    structure( list(data=format_data(d, colFormats, typeFormats, useOptions, na.rm),
+                row.names=NULL, col.names=T, corner="", ...) {
+    d <- format_data(d, colFormats, typeFormats, useOptions, na.rm)
+    if(is.null(row.names))
+        row.names = !is.null(rownames(d)) && !identical(rownames(d), as.character(seq_len(nrow(d))))
+    structure( list(data=d,
                     formats=array(rep(list(NULL),prod(dim(d))),dim=dim(d)),
                     master_format=cell_format(...),
                     cols=list(),
@@ -151,11 +178,15 @@ grid <- function(row.begin=1, col.begin=1, row.step=1, col.step=1, style="1px da
     ),
     class="grid")
 
+`%||%` <- function(a, b) if(is.null(a)) b else a
+
 #' print.tbl
 #' @export
 print.tblr <- function(t,...){   # generate html, latex, or console output
-    width_master <- ifelse(is.null(t$master_format$width), "", paste0(' width=',t$master_format$width) )
-    align_master <- ifelse(is.null(t$master_format$align), "", paste0(' align="',t$master_format$align,'"') )
+    w <- t$master_format$width %||% getOption("tblr.width")
+    width_master <- ifelse(is.null(w), "", paste0(' width=',w) )
+    a <- t$master_format$align %||% getOption("tblr.align")
+    align_master <- ifelse(is.null(a), "", paste0(' align="',a,'"') )
 
     fstyle <- NULL
     if(!is.null(t$frame)){
@@ -189,7 +220,7 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
                 align <- paste0(' align="',fmt$align,'"')
         }
         if(t$col.names)
-            cat('<TH',vline,width,align,'>', s, '</TH>', sep='')
+            cat('<TH',vline,width,align,'>', HTMLencode(s), '</TH>', sep='')
         else
             cat('<TH',vline,width,align,'></TH>', sep='')
 
@@ -207,7 +238,7 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
 
         if(t$row.names){
             vline <- ifelse(is.null(t$row0.linestyle), "", paste0(' style="',t$row0.linestyle,'"'))
-            cat('<TH', vline, '>', rownames(t$data)[i], '</TH>', sep='')
+            cat('<TH', vline, '>', HTMLencode(rownames(t$data)[i]), '</TH>', sep='')
         }
         for(j in 1:ncol(t$data)){
             #vline <- t$vlines[j][[1]]
@@ -226,7 +257,7 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
             if(!is.null(style))
                 style <- paste0('style="',do.call(paste, as.list(c(style, sep=";"))), '"')
 
-            cat('<TD',align,style,'>', format(t$data[i,j]), '</TD>', sep='')
+            cat('<TD',align,style,'>', HTMLencode(format(t$data[i,j])), '</TD>', sep='')
         }
         cat('</TR>\n')
     }

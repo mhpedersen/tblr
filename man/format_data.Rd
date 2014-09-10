@@ -4,7 +4,7 @@
 \title{Apply formatting to data.frame content}
 \usage{
 format_data(d, colFormats = NULL, typeFormats = NULL, useOptions = TRUE,
-  na.rm = getOption("tbl.na.rm", TRUE))
+  na.rm = getOption("tblr.na.rm", TRUE))
 }
 \description{
 Apply formatting to data.frame content
