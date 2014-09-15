@@ -89,8 +89,12 @@ tblr <- function(x, ...) UseMethod("tblr")
 #' @export
 tblr.default <- function(d, ...) tblr(as.data.frame(d), ...)
 #' @export
-tblr.table <- function(t, ...) tblr(as.data.frame.matrix(t), ...)
-
+tblr.table <- function(t, ...)
+    switch(length(dim(d)),
+        tblr(data.frame(as.list(t), check.names=FALSE), ...), # 1D
+        tblr(as.data.frame.matrix(t), ...), # 2D
+        tblr(as.data.frame(t), ...) # default; >2D
+    )
 
 
 #' Create a table object from a data.frame
@@ -104,6 +108,7 @@ tblr.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRU
                     formats=array(rep(list(NULL),prod(dim(d))),dim=dim(d)),
                     master_format=cell_format(...),
                     cols=list(),
+                    rows=list(),
                     hlines=list(),
                     vlines=list(),
                     row.names=row.names,
@@ -124,16 +129,24 @@ cell_format <- function(color=NULL, background=NULL, font=NULL, style=NULL, alig
     structure(list(color=color, background=background, font=font, style=style, align=align, format=format, width=width),
               class="cell_format")
 
-#' column
+#' columns
 #' @export
-column <- function(colname, ...)
+columns <- function(colnames, ...)
     structure(list(
-        colname=colname,
+        colnames=colnames,
         format=cell_format(...)
     ),
-    class="column")
+    class="columns")
 
-#columns
+#' column
+#' @export
+column <- function(colname, ...) columns(c(colname), ...)
+#    structure(list(
+#        colname=colname,
+#        format=cell_format(...)
+#    ),
+#    class="column")
+
 
 #' cell
 #' @export
@@ -241,8 +254,6 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
             cat('<TH', vline, '>', HTMLencode(rownames(t$data)[i]), '</TH>', sep='')
         }
         for(j in 1:ncol(t$data)){
-            #vline <- t$vlines[j][[1]]
-            #vline <- ifelse(is.null(vline), "", paste0(' style="',vline,'"'))
             style <- t$vlines[j][[1]]
 
             align <- align_master
@@ -253,7 +264,8 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
                 if(!is.null(fmt$background))
                     style <- c(style, paste0("background-color:",fmt$background))
                 if(!is.null(fmt$color))
-                    style <- c(style, paste0("color:",fmt$color))            }
+                    style <- c(style, paste0("color:",fmt$color))
+            }
             if(!is.null(style))
                 style <- paste0('style="',do.call(paste, as.list(c(style, sep=";"))), '"')
 
@@ -270,26 +282,24 @@ Ops.tblr <- function(t, x){
     if(.Generic!="+")
         stop(paste0(.Generic," not implemented for tbl"))
 
-    if(class(x)=="column")
-        t$cols[[x$colname]] <- x$format
+    if(class(x)=="columns")
+        t$cols[x$colnames] <- x$format
+#         for(colname in x$colnames)
+#             t$cols[[colname]] <- x$format
     else if(class(x)=="cells")
         for(idx in x$coords)
             t$formats[[idx[1], idx[2]]] <- x$format
     else if(class(x)=="hlines"){
         style <- paste0("border-bottom:",x$style)
-        for(idx in x$rows)
-            if(idx==0)
-                t$col0.linestyle <- style
-        else
-            t$hlines[[idx]] <- style
+        t$hlines[c(x$rows[x$rows>0], x$rows[x$rows<0]+nrow(t$data))]  <- style
+        if(0 %in% x$rows)
+            t$col0.linestyle <- style
     }
     else if(class(x)=="vlines"){
         style <- paste0("border-right:",x$style)
-        for(idx in x$cols)
-            if(idx==0)
-                t$row0.linestyle <- style
-        else
-            t$vlines[[idx]] <- style
+        t$vlines[c(x$cols[x$cols>0], x$cols[x$cols<0]+ncol(t$data))]  <- style
+        if(0 %in% x$cols)
+            t$row0.linestyle <- style
     }
     else if(class(x)=="frame")
         t$frame <- x
