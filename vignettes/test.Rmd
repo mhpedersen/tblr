@@ -22,12 +22,16 @@ d <- data.frame("0"=c(1,0,0,0,0,0,0,0,0), "1"=c(2,0,0,0,0,0,0,0,0), "2"=c(0,3,0,
 rtable allows us to easily specify formatting of tables, for example to produce something like this:
 ```{r, echo=FALSE, results='asis', message=FALSE}
 t <- tblr(d, col.names=T, row.names=T, width=30, align="center") + grid() + vlines(c(0,3,5,-1)) + hlines(c(0,3,5,-1)) +
-        cells(lapply(1:8, function(x) c(x,x)), background="lightgray") + frame()
+        cells(lapply(1:8, function(x) c(x,x)), background="lightgray") + frame() + 
+        caption("This is an ugly styled caption", top=FALSE, align="right", color="green", background="pink")
 #which(!diag(1,nrow(d),ncol(d)) & d>0, arr.ind=T)
 for(i in 1:nrow(d))
     for(j in 1:ncol(d))
         if(d[[j]][[i]]>0 & i!=j)
             t <- t + cell(i,j, background="whitesmoke")
 t <- t + cell(2,5,background="yellow", color="red")
+t
+
+t <- tblr(d, row.names=F, width=30, align="center") + frame() + rows(seq(2,nrow(d),2), background="lightgrey")
 t
 ```

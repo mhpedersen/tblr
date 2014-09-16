@@ -116,7 +116,10 @@ tblr.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRU
                     corner=corner,
                     frame=NULL,
                     row0.linestyle=NULL,
-                    col0.linestyle=NULL
+                    col0.linestyle=NULL,
+                    row0.format=NULL,
+                    col0.format=NULL,
+                    caption=NULL
     ),
     class = "tblr")
 }
@@ -128,6 +131,17 @@ tblr.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRU
 cell_format <- function(color=NULL, background=NULL, font=NULL, style=NULL, align=NULL, format=NULL, width=NULL)
     structure(list(color=color, background=background, font=font, style=style, align=align, format=format, width=width),
               class="cell_format")
+
+#' caption
+#' @export
+caption <- function(text, top=FALSE,  ...)
+    structure(list(
+            text=text,
+            top=top,
+            format=cell_format(...)
+        ),
+        class="caption")
+
 
 #' columns
 #' @export
@@ -141,11 +155,22 @@ columns <- function(colnames, ...)
 #' column
 #' @export
 column <- function(colname, ...) columns(c(colname), ...)
-#    structure(list(
-#        colname=colname,
-#        format=cell_format(...)
-#    ),
-#    class="column")
+
+
+#' rows
+#' @export
+rows <- function(rows, ...)
+    structure(list(
+        rows=rows,
+        format=cell_format(...)
+    ),
+    class="rows")
+
+#' row
+#' @export
+row <- function(r, ...) rows(c(r), ...)
+
+
 
 
 #' cell
@@ -212,11 +237,20 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
     }
     cat('<TABLE rules="groups" ', fstyle, '>\n')
 
+    if(!is.null(t$caption)){
+        style <- paste0("caption-side: ", if(t$caption$top) "top" else "bottom")
+        if(!is.null(t$caption$format$align)) style <- c(style, paste0("text-align:",t$caption$format$align))
+        if(!is.null(t$caption$format$color)) style <- c(style, paste0("color:",t$caption$format$color))
+        if(!is.null(t$caption$format$background)) style <- c(style, paste0("background:",t$caption$format$background))
+        style <- paste0('style="',do.call(paste, as.list(c(style, sep=";"))), '"')
+        cat('<CAPTION ', style, '>', t$caption$text, '</CAPTION>')
+    }
+
     # Generate table headers
     hline <- ifelse(is.null(t$col0.linestyle), "", paste0(' style="',t$col0.linestyle,'"'))
     vline <- ifelse(is.null(t$row0.linestyle), "", paste0(' style="',t$row0.linestyle,'"'))
     cat('<TR', hline, '>\n')
-    if(t$row.names) cat('<TH', vline, '>',t$corner,'</TH>\n')   # this could also have alignment and width
+    if(t$row.names) cat('<TH', vline, '>',HTMLencode(t$corner),'</TH>\n')   # this could also have alignment and width
     c <- 1
     for(s in colnames(t$data)){
         fmt <- t$cols[[s]]
@@ -280,12 +314,14 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
 #' @export
 Ops.tblr <- function(t, x){
     if(.Generic!="+")
-        stop(paste0(.Generic," not implemented for tbl"))
+        stop(paste0(.Generic," not implemented for tblr"))
 
     if(class(x)=="columns")
-        t$cols[x$colnames] <- x$format
-#         for(colname in x$colnames)
-#             t$cols[[colname]] <- x$format
+        for(c in x$colnames)
+            t$cols[[c]] <- x$format
+    else if(class(x)=="rows")
+        for(r in x$rows)
+            t$rows[[r]] <- x$format
     else if(class(x)=="cells")
         for(idx in x$coords)
             t$formats[[idx[1], idx[2]]] <- x$format
@@ -303,6 +339,8 @@ Ops.tblr <- function(t, x){
     }
     else if(class(x)=="frame")
         t$frame <- x
+    else if(class(x)=="caption")
+        t$caption <- x
     else if(class(x)=="grid"){
         for(i in seq(x$row.begin, dim(t$data)[1]-1, x$row.step))
             t$hlines[[i]] <- paste0("border-bottom:",x$style)
