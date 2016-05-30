@@ -1,13 +1,14 @@
-Package: rtable
-Title: What the package does (short line)
+Package: tblr
+Title: Tables
 Version: 0.1
-Authors@R: "First Last <first.last@example.com> [aut, cre]"
-Description: What the package does (paragraph)
+Authors@R: "Morten Pedersen <morten.pedersen@virgin.net> [aut, cre]"
+Description: High-level versatile formatting of tables for use in knitr/Sweave
 Depends:
     R (>= 3.1.1)
-License: What license is it under?
+License: GPL
 LazyData: true
 imports: magrittr
 Suggests:
     knitr
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1
