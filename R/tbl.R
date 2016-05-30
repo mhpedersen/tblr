@@ -323,7 +323,7 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
                     style <- c(style, paste0("color:",fmt$color))
             }
             if(!is.null(style))
-                style <- paste0('style="',do.call(paste, as.list(c(style, sep=";"))), '"')
+                style <- paste0(' style="',do.call(paste, as.list(c(style, sep=";"))), '"')
 
             cat('<TD',align,style,'>', HTMLencode(format(t$data[i,j])), '</TD>', sep='')
         }
