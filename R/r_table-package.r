@@ -1,5 +1,5 @@
-#' r_table.
+#' tblr.
 #'
-#' @name r_table
+#' @name tblr
 #' @docType package
 NULL
