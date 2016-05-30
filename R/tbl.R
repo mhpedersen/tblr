@@ -90,7 +90,7 @@ tblr <- function(x, ...) UseMethod("tblr")
 tblr.default <- function(d, ...) tblr(as.data.frame(d), ...)
 #' @export
 tblr.table <- function(t, ...)
-    switch(length(dim(d)),
+    switch(length(dim(t)),
         tblr(data.frame(as.list(t), check.names=FALSE), ...), # 1D
         tblr(as.data.frame.matrix(t), ...), # 2D
         tblr(as.data.frame(t), ...) # default; >2D
