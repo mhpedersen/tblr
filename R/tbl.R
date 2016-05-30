@@ -97,6 +97,12 @@ tblr.table <- function(t, ...)
     )
 
 
+newlist <- function(names){
+    l <- vector("list", length(names))
+    names(l) <- names
+    l
+}
+
 #' Create a table object from a data.frame
 #' @export
 tblr.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRUE, na.rm=getOption("tbl.na.rm",TRUE),
@@ -107,8 +113,8 @@ tblr.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRU
     structure( list(data=d,
                     formats=array(rep(list(NULL),prod(dim(d))),dim=dim(d)),
                     master_format=cell_format(...),
-                    cols=list(),
-                    rows=list(),
+                    cols=newlist(names(d)),
+                    rows=newlist(rownames(d)),
                     hlines=list(),
                     vlines=list(),
                     row.names=row.names,
@@ -131,6 +137,17 @@ tblr.data.frame <- function(d, colFormats=NULL, typeFormats=NULL, useOptions=TRU
 cell_format <- function(color=NULL, background=NULL, font=NULL, style=NULL, align=NULL, format=NULL, width=NULL)
     structure(list(color=color, background=background, font=font, style=style, align=align, format=format, width=width),
               class="cell_format")
+
+#' @export
+Ops.cell_format <- function(x, y){
+    if(.Generic!="+")
+        stop(paste0(.Generic," not implemented for cell_format"))
+
+    if(is.null(y)) return(x)
+    y <- y[sapply(y, function(x) !is.null(x))]
+    structure(c(x[!(names(x) %in% names(y))], y), class="cell_format")
+}
+
 
 #' caption
 #' @export
@@ -226,6 +243,8 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
     a <- t$master_format$align %||% getOption("tblr.align")
     align_master <- ifelse(is.null(a), "", paste0(' align="',a,'"') )
 
+    master_fmt <- cell_format(width=getOption("tblr.width"), align=getOption("tblr.align")) + t$master_format
+
     fstyle <- NULL
     if(!is.null(t$frame)){
         if(t$frame$left) fstyle <- c(fstyle, paste0("border-left:",t$frame$style))
@@ -277,7 +296,7 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
 
     # Main table
     for(i in 1:nrow(t$data)){
-        # formatting firstly from cells, then cols, then rows, then global
+        # formatting firstly from cells, then cols, then rows, then master, then global
 
         hline <- t$hlines[i][[1]]
         hline <- ifelse(is.null(hline), "", paste0(' style="',hline,'"'))
@@ -292,6 +311,9 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
 
             align <- align_master
             fmt <- t$formats[[i,j]]
+
+            fmt <- master_fmt + t$rows[[i]] + t$cols[[j]] + t$formats[[i,j]]
+            #align should just be a style
             if(!is.null(fmt)){
                 if(!is.null(fmt$align))
                     align <- paste0(' align="',fmt$align,'"')
@@ -310,6 +332,8 @@ print.tblr <- function(t,...){   # generate html, latex, or console output
 
     cat("</TABLE>")
 }
+
+
 
 #' @export
 Ops.tblr <- function(t, x){

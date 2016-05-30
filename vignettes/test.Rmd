@@ -32,6 +32,6 @@ for(i in 1:nrow(d))
 t <- t + cell(2,5,background="yellow", color="red")
 t
 
-t <- tblr(d, row.names=F, width=30, align="center") + frame() + rows(seq(2,nrow(d),2), background="lightgrey")
+t <- tblr(d, row.names=F, width=30, align="center") + frame() + rows(seq(2,nrow(d),2), background="whitesmoke")
 t
 ```
